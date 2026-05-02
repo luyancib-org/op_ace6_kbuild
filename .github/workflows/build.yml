@@ -42,8 +42,17 @@ jobs:
           git config --global user.name ${{ github.actor }}
           git config --global user.email ${{ github.actor }}@users.noreply.github.com
 
-      - name: Install repo tool
+      - name: Prepare ccache-ECS
+        id: get-ccache-ecs
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 'cctv18/ccache-ECS'
+          fileName: 'linux-x86_64-musl-static-binary.zip'
+          extract: true
+
+      - name: Install Requirement
         run: |
+          sudo apt install libelf-dev
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
           chmod a+x ~/repo
           sudo mv ~/repo /usr/local/bin/repo
@@ -60,7 +69,6 @@ jobs:
         run: |
           export PATH="/usr/lib/ccache:$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH" 
           export PATH="/usr/lib/ccache:$PATH"
-          sudo apt install libelf-dev ccache
           cd kernel_workspace/kernel_platform/common
           make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig all
 
