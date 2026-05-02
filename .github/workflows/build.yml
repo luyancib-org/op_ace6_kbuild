@@ -56,6 +56,7 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
           chmod a+x ~/repo
           sudo mv ~/repo /usr/local/bin/repo
+          sudo mv ${{ fromJson(steps.<step-id>.outputs.downloaded_files)[0] }} /usr/lib/ccache
 
       - name: sync
         run: |
@@ -67,8 +68,9 @@ jobs:
 
       - name: build
         run: |
-          export PATH="/usr/lib/ccache:$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH" 
+          export PATH="/usr/lib/ccache:$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH"
           export PATH="/usr/lib/ccache:$PATH"
+          export CCACHE_IS_KERNEL_COMPILING="true"
           cd kernel_workspace/kernel_platform/common
           make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig all
 
