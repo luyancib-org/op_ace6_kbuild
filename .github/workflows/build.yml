@@ -57,6 +57,7 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
           chmod a+x ~/repo
           sudo mv ~/repo /usr/local/bin/repo
+          chmod a+x ccache
           sudo mv ccache /usr/lib/ccache
 
       - name: sync
