@@ -47,6 +47,7 @@ jobs:
         uses: robinraju/release-downloader@v1
         with:
           repository: 'cctv18/ccache-ECS'
+          latest: true
           fileName: 'linux-x86_64-musl-static-binary.zip'
           extract: true
 
