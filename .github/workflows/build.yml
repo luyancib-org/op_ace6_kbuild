@@ -58,7 +58,8 @@ jobs:
           chmod a+x ~/repo
           sudo mv ~/repo /usr/local/bin/repo
           chmod a+x ccache
-          sudo mv ccache /usr/lib/ccache
+          sudo mv ccache /usr/local/bin/ccache
+          which ccache
 
       - name: sync
         run: |
