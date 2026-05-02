@@ -57,8 +57,7 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
           chmod a+x ~/repo
           sudo mv ~/repo /usr/local/bin/repo
-          ls
-          sudo mv ${{ fromJson(steps.get-ccache-ecs.outputs.downloaded_files)[0] }} /usr/lib/ccache
+          sudo mv ccache /usr/lib/ccache
 
       - name: sync
         run: |
