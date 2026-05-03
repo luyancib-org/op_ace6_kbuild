@@ -54,7 +54,7 @@ jobs:
           which ccache
 
       - name: status 1
-        run: ccache status
+        run: ccache stats
 
       - name: Restore ccache
         uses: actions/cache@v5
@@ -65,7 +65,7 @@ jobs:
             ccache-${{ runner.os }}-
 
       - name: status 2
-        run: ccache status
+        run: ccache stats
 
       - name: sync
         run: |
@@ -83,7 +83,7 @@ jobs:
           cd kernel_workspace/kernel_platform/common
           make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig all
       - name: status 3
-        run: ccache status
+        run: ccache stats
       - name: Pack anykernel3
         run: |
          cd kernel_workspace/
