@@ -29,14 +29,6 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
 
-      - name: Restore ccache
-        uses: actions/cache@v5
-        with:
-          path: /home/runner/.ccache
-          key: ccache-${{ runner.os }}-${{ github.ref }}
-          restore-keys: |
-            ccache-${{ runner.os }}-
-
       - name: Set git config
         run: |
           git config --global user.name ${{ github.actor }}
@@ -61,6 +53,20 @@ jobs:
           sudo mv ccache /usr/local/bin/ccache
           which ccache
 
+      - name: status 1
+        run: ccache status
+
+      - name: Restore ccache
+        uses: actions/cache@v5
+        with:
+          path: /home/runner/.ccache
+          key: ccache-${{ runner.os }}-${{ github.ref }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+
+      - name: status 2
+        run: ccache status
+
       - name: sync
         run: |
           mkdir kernel_workspace && cd kernel_workspace
@@ -76,7 +82,8 @@ jobs:
           export CCACHE_IS_KERNEL_COMPILING="true"
           cd kernel_workspace/kernel_platform/common
           make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig all
-
+      - name: status 3
+        run: ccache status
       - name: Pack anykernel3
         run: |
          cd kernel_workspace/
