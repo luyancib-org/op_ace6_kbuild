@@ -12,14 +12,9 @@ jobs:
   Build-Kernel:
     name: "Build kernel normal"
     runs-on: ubuntu-latest
-    env:
-      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
-      CCACHE_NOHASHDIR: "true"
-      CCACHE_HARDLINK: "true"
-      CCACHE_DIR: /home/runner/.ccache  
-      CCACHE_MAXSIZE: 8G
     steps:
       - name: Maximize build space
+        if: false
         uses: easimon/maximize-build-space@master
         with:
           root-reserve-mb: 8192
@@ -29,24 +24,39 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
 
-      - name: Restore ccache
-        uses: actions/cache@v5
-        with:
-          path: /home/runner/.ccache
-          key: ccache-${{ runner.os }}-${{ github.ref }}
-          restore-keys: |
-            ccache-${{ runner.os }}-
-
       - name: Set git config
         run: |
           git config --global user.name ${{ github.actor }}
           git config --global user.email ${{ github.actor }}@users.noreply.github.com
 
-      - name: Install repo tool
+      - name: Prepare ccache-ECS
+        id: get-ccache-ecs
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 'cctv18/ccache-ECS'
+          latest: true
+          fileName: 'linux-x86_64-musl-static-binary.zip'
+          extract: true
+
+      - name: Install Requirement
         run: |
+          sudo apt install libelf-dev
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
           chmod a+x ~/repo
           sudo mv ~/repo /usr/local/bin/repo
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ccache-${{ runner.os }}-${{ github.ref }}
+          max-size: 8G
+
+      - name: Replace ccache (Do hack)
+        run: |
+          origin_ccache=$(which ccache)
+          chmod a+x ./ccache
+          sudo rm -rf $origin_ccache
+          sudo mv ccache $origin_ccache
 
       - name: sync
         run: |
@@ -58,9 +68,9 @@ jobs:
 
       - name: build
         run: |
-          export PATH="/usr/lib/ccache:$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH" 
-          export PATH="/usr/lib/ccache:$PATH"
-          sudo apt install libelf-dev ccache
+          export PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH"
+          export CCACHE_IS_KERNEL_COMPILING="true"
+          export CCACHE_LOGFILE="${{ github.workspace }}/ccache.log"
           cd kernel_workspace/kernel_platform/common
           make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig all
 
@@ -79,6 +89,12 @@ jobs:
           name: Anykernel3
           path: kernel_workspace/AnyKernel3_Op_ACE6.zip
           archive: false
+
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: ccache-log
+          path: ${{ github.workspace }}/ccache.log
 
          
          
