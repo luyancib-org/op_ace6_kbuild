@@ -12,12 +12,6 @@ jobs:
   Build-Kernel:
     name: "Build kernel normal"
     runs-on: ubuntu-latest
-    env:
-      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
-      CCACHE_NOHASHDIR: "true"
-      CCACHE_HARDLINK: "true"
-      CCACHE_DIR: /home/runner/.ccache  
-      CCACHE_MAXSIZE: 8G
     steps:
       - name: Maximize build space
         if: false
@@ -50,17 +44,19 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
           chmod a+x ~/repo
           sudo mv ~/repo /usr/local/bin/repo
-          chmod a+x ccache
-          sudo mv ccache /usr/local/bin/ccache
-          which ccache
 
-      - name: Restore ccache
-        uses: actions/cache@v5
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1
         with:
-          path: /home/runner/.ccache
           key: ccache-${{ runner.os }}-${{ github.ref }}
-          restore-keys: |
-            ccache-${{ runner.os }}-
+          max-size: 8G
+
+      - name: Replace ccache (Do hack)
+        run: |
+          origin_ccache=$(which ccache)
+          chmod a+x ./ccache
+          sudo rm -rf $origin_ccache
+          sudo mv ccache $origin_ccache
 
       - name: sync
         run: |
